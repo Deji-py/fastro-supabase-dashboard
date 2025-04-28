@@ -1,7 +1,7 @@
-"use client";
 import { useFastroData } from "@/lib/Fastro";
 import { FastroNotification } from "@/utils/FastroNotification";
 import { nprogress } from "@mantine/nprogress";
+import { useCallback, useMemo } from "react";
 
 export default function useFastroTable<T>({
   tableName,
@@ -10,139 +10,178 @@ export default function useFastroTable<T>({
   onSuccessDelete,
   onSuccessBulkDelete,
   returning = "*",
+  rpcQuery, // Add the RPC query parameter
 }: {
-  tableName: string;
+  tableName?: string;
   onSuccessCreate?: (data: any) => void;
   onSuccessUpdate?: (data: any) => void;
   onSuccessDelete?: (data: any) => void;
   onSuccessBulkDelete?: (data: any) => void;
   returning?: string;
-  ignore_columns?: string[]; // Added ignore_columns option
+  rpcQuery?: string; // Accept a custom RPC query
 }) {
-  const { useQuery, useCreate, useUpdate, useDelete, useBulkDelete } =
+  const { useQuery, useCreate, useUpdate, useDelete, useBulkDelete, useRpc } =
     useFastroData();
 
-  // Query the data
-  const { data, isLoading, isError } = useQuery<T[]>(tableName, {
+  // Query data from the table if no rpcQuery is provided
+  const { data, isLoading, isError } = useQuery<T[]>(tableName as string, {
     select: returning,
     order: [{ column: "created_at", ascending: false }],
+    enabled: !rpcQuery, // Disable useQuery if rpcQuery is provided
   });
 
-  // Create mutation
-  const createMutation = useCreate<T>(tableName, {
-    returning: returning,
-    onSuccess: (data) => {
-      onSuccessCreate?.(data);
+  // Query data from the custom RPC function if `rpcQuery` is provided
+  const {
+    data: rpcData,
+    isError: rpcError,
+    isPending,
+  } = useRpc<T[]>(rpcQuery || "");
+
+  // Combine the results, prioritizing RPC data if available
+  const finalData = rpcQuery ? rpcData : data;
+
+  // Helper function to trigger notifications
+  const triggerNotification = useCallback(
+    (type: "success" | "error", title: string, message: string) => {
       FastroNotification({
-        type: "success",
-        title: `New ${tableName} Created Successfully!!`,
-        message: "You have successfully created data.",
+        type,
+        title,
+        message,
       });
     },
+    []
+  );
+
+  // Create mutation
+  const createMutation = useCreate<T>(tableName as string, {
+    returning,
+    onSuccess: (data) => {
+      onSuccessCreate?.(data);
+      triggerNotification(
+        "success",
+        `New ${tableName} Created Successfully!!`,
+        "You have successfully created data."
+      );
+    },
     onError: (error) => {
-      FastroNotification({
-        type: "error",
-        title: `Error Creating ${tableName}`,
-        message: `There was an error while creating data: ${error.message}`,
-      });
+      triggerNotification(
+        "error",
+        `Error Creating ${tableName}`,
+        `There was an error while creating data: ${error.message}`
+      );
     },
   });
 
   // Update mutation
-  const updateMutation = useUpdate<T>(tableName, {
-    returning: returning,
+  const updateMutation = useUpdate<T>(tableName as string, {
+    returning,
     onSuccess: (data) => {
       onSuccessUpdate?.(data);
-      FastroNotification({
-        type: "success",
-        title: `${tableName} Updated Successfully`,
-        message: "You have successfully updated data.",
-      });
+      triggerNotification(
+        "success",
+        `${tableName} Updated Successfully`,
+        "You have successfully updated data."
+      );
     },
     onError: (error) => {
-      FastroNotification({
-        type: "error",
-        title: `Error Updating ${tableName}`,
-        message: `There was an error while updating data: ${error.message}`,
-      });
+      triggerNotification(
+        "error",
+        `Error Updating ${tableName}`,
+        `There was an error while updating data: ${error.message}`
+      );
     },
   });
 
   // Delete mutation
-  const deleteMutation = useDelete<T>(tableName, {
-    returning: returning,
+  const deleteMutation = useDelete<T>(tableName as string, {
+    returning,
     onSuccess: (data) => {
       onSuccessDelete?.(data);
-      FastroNotification({
-        type: "success",
-        title: `${tableName} Deleted Successfully`,
-        message: "You have successfully deleted the data.",
-      });
+      triggerNotification(
+        "success",
+        `${tableName} Deleted Successfully`,
+        "You have successfully deleted the data."
+      );
     },
     onError: (error) => {
-      FastroNotification({
-        type: "error",
-        title: `Error Deleting ${tableName}`,
-        message: `There was an error while deleting data: ${error.message}`,
-      });
+      triggerNotification(
+        "error",
+        `Error Deleting ${tableName}`,
+        `There was an error while deleting data: ${error.message}`
+      );
     },
   });
 
   // Bulk delete mutation
-  const bulkDeleteMutation = useBulkDelete<T>(tableName, {
-    returning: returning,
+  const bulkDeleteMutation = useBulkDelete<T>(tableName as string, {
+    returning,
     onSuccess: (data) => {
       onSuccessBulkDelete?.(data);
-      FastroNotification({
-        type: "success",
-        title: `Bulk Deletion of ${tableName} Successful`,
-        message: "You have successfully deleted multiple entries.",
-      });
+      triggerNotification(
+        "success",
+        `Bulk Deletion of ${tableName} Successful`,
+        "You have successfully deleted multiple entries."
+      );
     },
     onError: (error) => {
-      FastroNotification({
-        type: "error",
-        title: `Error Bulk Deleting ${tableName}`,
-        message: `There was an error while bulk deleting data: ${error.message}`,
-      });
+      triggerNotification(
+        "error",
+        `Error Bulk Deleting ${tableName}`,
+        `There was an error while bulk deleting data: ${error.message}`
+      );
     },
   });
 
   // Handle row creation
-  const handleCreateRow = async (data: Partial<T>) => {
-    nprogress.start();
-    await createMutation.mutateAsync(data);
-    nprogress.complete();
-  };
+  const handleCreateRow = useCallback(
+    async (data: Partial<T>) => {
+      nprogress.start();
+      await createMutation.mutateAsync(data);
+      nprogress.complete();
+    },
+    [createMutation]
+  );
 
   // Handle row update
-  const handleUpdateRow = async (newData: T, oldData: T) => {
-    const { id: oldId } = oldData as { id: string };
-    nprogress.start();
-    await updateMutation.mutateAsync({ id: oldId, data: newData });
-    nprogress.complete();
-  };
+  const handleUpdateRow = useCallback(
+    async (newData: T, oldData: T) => {
+      const { id: oldId } = oldData as { id: string };
+      nprogress.start();
+      await updateMutation.mutateAsync({ id: oldId, data: newData });
+      nprogress.complete();
+    },
+    [updateMutation]
+  );
 
   // Handle row deletion
-  const handleDeleteRow = async (data: T) => {
-    const { id: data_id } = data as { id: string };
-    nprogress.start();
-    await deleteMutation.mutateAsync(data_id);
-    nprogress.complete();
-  };
+  const handleDeleteRow = useCallback(
+    async (data: T) => {
+      const { id: data_id } = data as { id: string };
+      nprogress.start();
+      await deleteMutation.mutateAsync(data_id);
+      nprogress.complete();
+    },
+    [deleteMutation]
+  );
 
   // Handle bulk deletion
-  const handleBulkDelete = async <T extends { id: string }>(data: T[]) => {
-    const ids = data.map((item) => item.id.toString());
-    nprogress.start();
-    await bulkDeleteMutation.mutateAsync({ in: { id: ids } });
-    nprogress.complete();
-  };
+  const handleBulkDelete = useCallback(
+    async (data: T[]) => {
+      const ids = data.map((item: any) => item.id.toString());
+      nprogress.start();
+      await bulkDeleteMutation.mutateAsync({ in: { id: ids } });
+      nprogress.complete();
+    },
+    [bulkDeleteMutation]
+  );
+
+  // Memoize the data to prevent unnecessary re-renders
+  const memoizedData = useMemo(() => finalData || [], [finalData]);
 
   return {
-    data: data || [],
-    isLoading,
-    isError,
+    data: memoizedData,
+    isLoading: isLoading || isPending,
+    isError: isError || rpcError,
     handleCreateRow,
     handleUpdateRow,
     handleDeleteRow,

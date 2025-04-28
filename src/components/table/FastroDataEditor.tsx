@@ -1,6 +1,4 @@
-"use client";
-
-import { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Button, Divider, Stack, Group } from "@mantine/core";
 import { z } from "zod";
 import {
@@ -31,7 +29,7 @@ type FastroDataEditorProps<T extends object> = {
   readOnly?: boolean;
 };
 
-function FastroDataEditor<T extends object>({
+function FastroDataEditorOptimized<T extends object>({
   data,
   columnDef,
   dropdownOptions = [],
@@ -41,7 +39,7 @@ function FastroDataEditor<T extends object>({
   cancelLabel = "Cancel",
   readOnly = false,
 }: FastroDataEditorProps<T>) {
-  // Create a map of dropdown options by field name
+  // Create a stable map of dropdown options by field name
   const dropdownMap = useMemo(() => {
     const map: Record<string, DropdownOption[]> = {};
     dropdownOptions.forEach(({ field, options }) => {
@@ -51,40 +49,24 @@ function FastroDataEditor<T extends object>({
   }, [dropdownOptions]);
 
   // Generate schema based on column definitions and data types
-  const generateSchema = () => {
-    const schema: Record<string, any> = {};
+  const schemaGenerator = useMemo(() => {
+    return () => {
+      const schema: Record<string, any> = {};
 
-    Object.entries(data).forEach(([key, value]) => {
-      const variant = (columnDef as any)[key] as CellVariants;
+      Object.entries(data).forEach(([key, value]) => {
+        const variant = (columnDef as any)[key] as CellVariants;
 
-      switch (variant) {
-        case "email":
-          schema[key] = z.string().email("Invalid email address");
-          break;
-        case "phone":
-          schema[key] = z.string().min(10, "Phone number is too short");
-          break;
-        case "currency":
-        case "percentage":
-        case "progress":
-        case "rating":
-          schema[key] = z
-            .number()
-            .optional()
-            .or(
-              z
-                .string()
-                .transform((val) => (val === "" ? undefined : Number(val)))
-            );
-          break;
-        case "boolean":
-          schema[key] = z.boolean().optional();
-          break;
-        case "avatar":
-          schema[key] = z.any();
-          break;
-        default:
-          if (typeof value === "number") {
+        switch (variant) {
+          case "email":
+            schema[key] = z.string().email("Invalid email address");
+            break;
+          case "phone":
+            schema[key] = z.string().min(10, "Phone number is too short");
+            break;
+          case "currency":
+          case "percentage":
+          case "progress":
+          case "rating":
             schema[key] = z
               .number()
               .optional()
@@ -93,21 +75,49 @@ function FastroDataEditor<T extends object>({
                   .string()
                   .transform((val) => (val === "" ? undefined : Number(val)))
               );
-          } else if (typeof value === "boolean") {
+            break;
+          case "boolean":
             schema[key] = z.boolean().optional();
-          } else if (value === null || value === undefined) {
-            schema[key] = z.any().optional();
-          } else {
-            schema[key] = z.string().optional();
-          }
-      }
-    });
+            break;
+          case "avatar":
+            schema[key] = z.any();
+            break;
+          case "date":
+            schema[key] = z
+              .preprocess((val) => {
+                if (val === undefined || val === null || val === "")
+                  return undefined;
+                const date = new Date(val as any);
+                return isNaN(date.getTime()) ? undefined : date;
+              }, z.date())
+              .optional();
+            break;
+          default:
+            if (typeof value === "number") {
+              schema[key] = z
+                .number()
+                .optional()
+                .or(
+                  z
+                    .string()
+                    .transform((val) => (val === "" ? undefined : Number(val)))
+                );
+            } else if (typeof value === "boolean") {
+              schema[key] = z.boolean().optional();
+            } else if (value === null || value === undefined) {
+              schema[key] = z.any().optional();
+            } else {
+              schema[key] = z.string().optional();
+            }
+        }
+      });
 
-    return z.object(schema);
-  };
+      return z.object(schema);
+    };
+  }, [data, columnDef]);
 
-  // Normalize data for the form
-  const normalizeData = () => {
+  // Normalize data for the form once
+  const normalizedData = useMemo(() => {
     const normalized: Record<string, any> = {};
 
     Object.entries(data).forEach(([key, value]) => {
@@ -117,53 +127,55 @@ function FastroDataEditor<T extends object>({
     });
 
     return normalized;
-  };
+  }, [data, columnDef]);
 
-  // Create input components based on column definitions
-  const createInputComponent = (
-    key: string,
-    value: any,
-    form: UseFormReturnType<any>
-  ) => {
-    const variant = ((columnDef as any)[key] as CellVariants) || "custom";
-    const inputType = getInputTypeFromVariant(variant, value);
-
-    const inputProps: FastroInputProps = {
-      form,
-      input_type: inputType as any,
-      name: key,
-      label:
-        key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1"),
-      disabled: readOnly,
-    };
-
-    // Add dropdown options if available
-    if (
-      dropdownMap[key] &&
-      (inputType === "select" || inputType === "dropdown")
-    ) {
-      inputProps.options = dropdownMap[key];
-    }
-
-    return <FastroInput key={key} {...inputProps} />;
-  };
-
-  const handleSubmit = (values: any) => {
+  // Create stable callback for form submission
+  const handleSubmit = useCallback((values: any) => {
     if (onSubmit) {
       onSubmit(values);
     }
-  };
+  }, []);
+
+  // Memoize the input components only when necessary dependencies change
+  const InputComponents = useMemo(() => {
+    return ({ form }: { form: UseFormReturnType<any> }) => (
+      <>
+        {Object.entries(data).map(([key, value]) => {
+          const variant = ((columnDef as any)[key] as CellVariants) || "custom";
+          const inputType = getInputTypeFromVariant(variant, value);
+
+          const inputProps: FastroInputProps = {
+            form,
+            input_type: inputType as any,
+            name: key,
+            label:
+              key.charAt(0).toUpperCase() +
+              key.slice(1).replace(/([A-Z])/g, " $1"),
+            disabled: readOnly,
+          };
+
+          // Add dropdown options if available
+          if (
+            dropdownMap[key] &&
+            (inputType === "select" || inputType === "dropdown")
+          ) {
+            inputProps.options = dropdownMap[key];
+          }
+
+          return <FastroInput key={key} {...inputProps} />;
+        })}
+      </>
+    );
+  }, [data, columnDef, dropdownMap, readOnly]);
 
   return (
     <div>
       <Divider mb={10} />
-      <FormValidator initialValues={normalizeData()} schema={generateSchema()}>
+      <FormValidator initialValues={normalizedData} schema={schemaGenerator()}>
         {({ form }) => (
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack gap="md">
-              {Object.entries(data).map(([key, value]) =>
-                createInputComponent(key, value, form)
-              )}
+              <InputComponents form={form} />
             </Stack>
             <Group align="right" mt={20}>
               {onCancel && (
@@ -182,4 +194,4 @@ function FastroDataEditor<T extends object>({
   );
 }
 
-export default FastroDataEditor;
+export default React.memo(FastroDataEditorOptimized);

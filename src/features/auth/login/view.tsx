@@ -40,7 +40,7 @@ export default function View() {
               src={APP_LOGO_BLACK}
               alt="app logo"
               w="auto"
-              h={20}
+              h={35}
               fit="contain"
               style={{ maxWidth: "100%", maxHeight: "100%" }}
             />

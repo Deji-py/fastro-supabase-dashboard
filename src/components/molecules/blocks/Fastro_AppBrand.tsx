@@ -9,7 +9,7 @@ function Fastro_AppBrand() {
       p="md"
       style={{
         maxWidth: "100%",
-        height: 55,
+        height: 70,
       }}
     >
       <Image

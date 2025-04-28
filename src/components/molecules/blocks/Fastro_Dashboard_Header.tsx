@@ -46,7 +46,7 @@ const Fastro_Dashboard_Header: React.FC<FastroDashboardHeaderProps> = ({
         <Paper withBorder radius="md">
           <Select
             value={filterValue}
-            // onChange={onFilterChange}
+            onChange={(value) => value && onFilterChange?.(value)}
             data={filterOptions}
             leftSection={<IconCalendarEvent size={16} color="#4c6ef5" />}
             placeholder="Filter Period"

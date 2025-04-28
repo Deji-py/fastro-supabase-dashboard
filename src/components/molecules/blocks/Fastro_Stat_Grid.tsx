@@ -22,7 +22,7 @@ export type FastroStatItemType = {
     type: "bar" | "line";
     data: any[];
   } | null;
-  total?: number;
+  total?: number | string;
   icon?: React.ReactNode;
   subtext?: string | null;
 };

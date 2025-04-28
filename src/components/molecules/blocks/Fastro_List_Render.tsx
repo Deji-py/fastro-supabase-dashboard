@@ -21,6 +21,7 @@ type Props = {
   header?: string; // Optional header
   showHeader?: boolean; // Flag to conditionally show header
   radius?: MantineRadius | undefined;
+  max?: number;
 };
 
 function Fastro_List_Render({
@@ -29,8 +30,10 @@ function Fastro_List_Render({
   header = "All Databases",
   showHeader = true,
   radius = "md",
+  max = 7,
 }: Props) {
   const theme = useMantineTheme();
+
   return (
     <Card p="md" radius={radius} withBorder>
       {showHeader && (
@@ -45,7 +48,7 @@ function Fastro_List_Render({
       )}
       <Divider mb={"md"} />
       <Stack gap="sm">
-        {data.map((item) => (
+        {data.slice(0, max).map((item) => (
           <FastroListItem key={item.id} item={item} variant={variant} />
         ))}
       </Stack>

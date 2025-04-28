@@ -63,7 +63,7 @@ function FastroListItem({
       return (
         <Group justify="space-between">
           <Group>
-            <ThemeIcon variant="light" color={theme.primaryColor}>
+            <ThemeIcon variant="light" color={item.color}>
               {item.icon || <IconUser size="1rem" />}
             </ThemeIcon>
             <div>
@@ -82,7 +82,7 @@ function FastroListItem({
       return (
         <Group justify="space-between">
           <Group>
-            <Avatar src={item.profile_pic} />
+            <Avatar src={item.profile_pic} alt="profile_pic" />
             <div>
               <Text fw={500}>{item.title}</Text>
               {item.subtitle && (
@@ -99,7 +99,7 @@ function FastroListItem({
       return (
         <Group justify="space-between">
           <Group>
-            <Avatar src={item.profile_pic} />
+            <Avatar src={item.profile_pic} alt="avatar" />
             <div>
               <Text size="sm" fw={500}>
                 {item.title}
@@ -148,7 +148,7 @@ function FastroListItem({
     case "highlight":
       return (
         <Box bg="blue.0" p="xs">
-          <Text fw={600} c={theme.primaryColor}>
+          <Text fw={600} c={item.color}>
             {item.title}
           </Text>
           {item.subtitle && <Text size="xs">{item.subtitle}</Text>}
@@ -212,7 +212,7 @@ function FastroListItem({
       return (
         <Group justify="space-between">
           <Group>
-            <ThemeIcon size="xl" variant="light" color={theme.primaryColor}>
+            <ThemeIcon size="xl" variant="light" color={item.color}>
               {item.icon || <IconUser size="2rem" />}
             </ThemeIcon>
             <div>
@@ -229,7 +229,7 @@ function FastroListItem({
       );
     case "notification":
       return (
-        <Group justify="space-between">
+        <Group align="start" justify="space-between">
           <Flex gap={10}>
             <ThemeIcon
               size="md"
@@ -240,11 +240,17 @@ function FastroListItem({
               {item.icon || <BellDot size="1.5rem" />}
             </ThemeIcon>
             <div>
-              <Text fw={400} lineClamp={2} size="sm">
+              <Text fw={400} lineClamp={1} size="sm">
                 {item.title}
+              </Text>
+              <Text fw={400} lineClamp={2} c="dimmed" size="sm">
+                {item.subtitle}
               </Text>
             </div>
           </Flex>
+          <Text size="sm" c={"dimmed"}>
+            {item.rightLabel}
+          </Text>
         </Group>
       );
 

@@ -2,6 +2,7 @@
 import { Card, Table, Text, Title, Divider, Box } from "@mantine/core";
 import FastroSuperCell, { type CellVariants } from "@/utils/FastroSuperCell";
 import type { ColumnVariantMap } from "@/utils/FastroColumnGenerator";
+import React from "react";
 
 type FastroDataPreviewProps<T extends object> = {
   data: T;
@@ -82,7 +83,7 @@ function FastroDataPreview<T extends object>({
         <div className="space-y-4">
           {fields.map((key) => (
             <div key={key}>
-              <Text size="sm" color="dimmed" mb={4}>
+              <Text size="sm" c="dimmed" mb={4}>
                 {formatLabel(key)}
               </Text>
               <Box>{renderCell(key, (data as any)[key])}</Box>
@@ -107,7 +108,7 @@ function FastroDataPreview<T extends object>({
       <div className="grid grid-cols-2 gap-4">
         {fields.map((key) => (
           <div key={key} className="p-3 border rounded">
-            <Text size="sm" color="dimmed" mb={2}>
+            <Text size="sm" c="dimmed" mb={2}>
               {formatLabel(key)}
             </Text>
             <Box>{renderCell(key, (data as any)[key])}</Box>
@@ -118,4 +119,6 @@ function FastroDataPreview<T extends object>({
   );
 }
 
-export default FastroDataPreview;
+const MemoizedFastroDataPreview = React.memo(FastroDataPreview);
+
+export default MemoizedFastroDataPreview;

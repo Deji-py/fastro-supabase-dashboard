@@ -17,6 +17,7 @@ import {
   createTheme,
   mantineHtmlProps,
 } from "@mantine/core";
+import { NotificationProvider } from "@/providers/notification-provider";
 
 const geistSans = Outfit({
   variable: "--font-geist-sans",
@@ -36,6 +37,7 @@ export const metadata: Metadata = {
 // Set the global theme of the app
 const theme = createTheme({
   fontFamily: "Outfit, sans-serif",
+  primaryColor: "violet",
   // You can pass mantine props here
 });
 
@@ -53,11 +55,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <MantineProvider withCssVariables theme={theme}>
-          <Fastro provider_type="supabase">
-            <Notifications />
-            <NavigationProgress />
-            {children}
-          </Fastro>
+          <NotificationProvider>
+            <Fastro provider_type="supabase">
+              <Notifications />
+              <NavigationProgress />
+              {children}
+            </Fastro>
+          </NotificationProvider>
         </MantineProvider>
       </body>
     </html>

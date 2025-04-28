@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ActionIcon, Group, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Box, Group, Tooltip } from "@mantine/core";
 
 // Define the type for a single action icon
 export interface ActionIconItem {
@@ -18,6 +18,7 @@ export interface ActionIconItem {
     | "default";
   disabled?: boolean;
   className?: string;
+  notification?: { count: number };
 }
 
 interface Fastro_HeaderActionIconsProps {
@@ -38,26 +39,39 @@ function Fastro_HeaderActionIcons({
   return (
     <Group visibleFrom="sm" gap={spacing} className={className}>
       {icons.map((item, index) => (
-        <Tooltip
-          key={index}
-          label={item.label}
-          disabled={!item.label}
-          position="bottom"
-          withArrow
-        >
-          <ActionIcon
-            variant={item.variant || "default"}
-            onClick={item.onClick}
-            color={item.color}
-            disabled={item.disabled}
-            size={size}
-            radius={radius}
-            className={item.className}
-            aria-label={item.label || `Action ${index + 1}`}
+        <Box key={index} pos="relative">
+          {item.notification && (
+            <Badge
+              size="xs"
+              pos="absolute"
+              style={{ zIndex: 10 }}
+              color="red.7"
+              top={-2}
+              left={-2}
+            >
+              {item.notification.count}
+            </Badge>
+          )}
+          <Tooltip
+            label={item.label}
+            disabled={!item.label}
+            position="bottom"
+            withArrow
           >
-            {item.icon}
-          </ActionIcon>
-        </Tooltip>
+            <ActionIcon
+              variant={item.variant || "default"}
+              onClick={item.onClick}
+              color={item.color}
+              disabled={item.disabled}
+              size={size}
+              radius={radius}
+              className={item.className}
+              aria-label={item.label || `Action ${index + 1}`}
+            >
+              {item.icon}
+            </ActionIcon>
+          </Tooltip>
+        </Box>
       ))}
     </Group>
   );

@@ -1,8 +1,12 @@
 import VerifyOTPView from "@/features/auth/verify-otp/view";
-import React from "react";
+import React, { Suspense } from "react";
 
 function VerifyOTP() {
-  return <VerifyOTPView />;
+  return (
+    <Suspense fallback="loading">
+      <VerifyOTPView />;
+    </Suspense>
+  );
 }
 
 export default VerifyOTP;

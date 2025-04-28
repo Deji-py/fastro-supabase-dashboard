@@ -269,7 +269,7 @@ function Fastro_RichSearch<T extends { id: string | number }>({
         size="sm"
         styles={(theme) => ({
           root: {
-            width: "auto",
+            width: inputWidth,
             display: "inline-block",
           },
           input: {

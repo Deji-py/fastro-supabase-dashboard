@@ -1,25 +1,32 @@
+import React from "react";
+import { Text } from "@mantine/core";
 import {
-  Avatar,
-  Badge,
-  Progress,
-  Group,
-  Text,
-  Image,
-  Tooltip,
-  Flex,
-} from "@mantine/core";
-
-import {
-  IconCheck,
-  IconX,
-  IconLoader,
-  IconStar,
-  IconShieldCheck,
-  IconMapPin,
-  IconMail,
-  IconPhone,
-} from "@tabler/icons-react";
-import moment from "moment";
+  AvatarCell,
+  BadgeCell,
+  BooleanCell,
+  ColorCell,
+  CurrencyCell,
+  CustomCell,
+  DateCell,
+  EmailCell,
+  EmailListCell,
+  EmptyCell,
+  FlagCell,
+  IconCell,
+  ImageCell,
+  LocationCell,
+  PercentageCell,
+  PhoneCell,
+  ProgressCell,
+  RatingCell,
+  RichEditorCell,
+  RoleCell,
+  SentimentCell,
+  StatusCell,
+  TagCell,
+  UsernameCell,
+  VerifiedCell,
+} from "./_cell_components";
 
 export type CellVariants =
   | "avatar"
@@ -42,7 +49,10 @@ export type CellVariants =
   | "role"
   | "location"
   | "custom"
-  | "rich-editor"; // Add "rich-editor" variant
+  | "rich-editor"
+  | "color"
+  | "sentiment"
+  | "email-list";
 
 type FastroSuperCellProps = {
   variant: CellVariants;
@@ -50,181 +60,93 @@ type FastroSuperCellProps = {
   options?: any;
 };
 
-function FastroSuperCell({ variant, value, options }: FastroSuperCellProps) {
-  // Handle null or undefined values gracefully
+function FastroSuperCellComponent({
+  variant,
+  value,
+  options,
+}: FastroSuperCellProps) {
   if (value === null || value === undefined) {
     return <Text c="dimmed">—</Text>;
   }
 
   switch (variant) {
     case "avatar":
-      return (
-        <Group>
-          <Avatar src={value.src || value.profile_pic} radius="xl" size="sm" />
-          <Text size="sm">{value.name}</Text>
-        </Group>
-      );
+      return <AvatarCell value={value} />;
 
     case "badge":
-      // Handle case where value is an object with label and color properties
-      if (typeof value === "object" && value !== null) {
-        return (
-          <Badge color={value.color || "gray"} variant="light">
-            {value.label || JSON.stringify(value)}
-          </Badge>
-        );
-      }
-      return (
-        <Badge color="gray" variant="light">
-          {String(value)}
-        </Badge>
-      );
+      return <BadgeCell value={value} />;
 
     case "progress":
-      return <Progress value={value} w={100} size="sm" radius="xl" />;
+      return <ProgressCell value={value} />;
 
-    case "status": {
-      const defaultStatuses = {
-        complete: {
-          icon: <IconCheck color="green" size={16} />,
-          color: "green",
-        },
-        pending: {
-          icon: (
-            <IconLoader color="orange" size={16} className="animate-spin" />
-          ),
-          color: "orange",
-        },
-        failed: { icon: <IconX color="red" size={16} />, color: "red" },
-      };
+    case "status":
+      return <StatusCell value={value} options={options} />;
 
-      const statusOptions = options?.statusMap || defaultStatuses;
-      const current = statusOptions[value] || { icon: null, color: "gray" };
-
-      return (
-        <Group gap="xs">
-          {current.icon}
-          <Text c={current.color}>{value}</Text>
-        </Group>
-      );
-    }
+    case "sentiment":
+      return <SentimentCell value={value} />;
 
     case "icon":
-      return value;
+      return <IconCell value={value} />;
 
     case "date":
-      return <Text>{moment(new Date(value)).format("ll")}</Text>;
+      return <DateCell value={value} />;
 
     case "rating":
-      return (
-        <Group gap={2}>
-          {Array.from({ length: Number(value) }).map((_, i) => (
-            <IconStar key={i} size={16} color="gold" />
-          ))}
-        </Group>
-      );
+      return <RatingCell value={value} />;
 
     case "flag":
-      return <Text fz="xl">{value}</Text>;
+      return <FlagCell value={value} />;
 
     case "verified":
-      return (
-        <Group gap="xs">
-          <IconShieldCheck size={16} color="green" />
-          <Text c="green">Verified</Text>
-        </Group>
-      );
+      return <VerifiedCell />;
 
     case "currency":
-      return <Text>${Number(value).toFixed(2)}</Text>;
+      return <CurrencyCell value={value} />;
 
     case "percentage":
-      return <Text>{value}%</Text>;
+      return <PercentageCell value={value} />;
 
     case "email":
-      return (
-        <Tooltip label={`Send mail to ${value}`}>
-          <a href={`mailto:${value}`}>
-            <Flex align="center" gap="xs">
-              <IconMail size={14} />
-              <Text>{value}</Text>
-            </Flex>
-          </a>
-        </Tooltip>
-      );
+      return <EmailCell value={value} />;
 
     case "phone":
-      return (
-        <a href={`tel:${value}`}>
-          <Group gap="xs">
-            <IconPhone size={14} />
-            <Text>{value}</Text>
-          </Group>
-        </a>
-      );
+      return <PhoneCell value={value} />;
 
     case "username":
-      return <Text>@{value}</Text>;
+      return <UsernameCell value={value} />;
 
     case "image":
-      return (
-        <Image
-          src={value || "/placeholder.svg"}
-          alt=""
-          width={40}
-          height={40}
-          radius="md"
-          fit="cover"
-        />
-      );
+      return <ImageCell value={value} />;
 
     case "tag":
-      return <Badge color="blue">{value}</Badge>;
+      return <TagCell value={value} />;
 
     case "boolean":
-      return <Text c={value ? "green" : "red"}>{value ? "Yes" : "No"}</Text>;
+      return <BooleanCell value={value} />;
 
     case "role":
-      return <Badge variant="light">{value}</Badge>;
+      return <RoleCell value={value} />;
 
     case "location":
-      return (
-        <Group gap="xs">
-          <IconMapPin size={14} />
-          <Text>{value}</Text>
-        </Group>
-      );
+      return <LocationCell value={value} />;
+
+    case "color":
+      return <ColorCell value={value} />;
 
     case "rich-editor":
-      // For "rich-editor" variant, we will render the value as HTML and limit the text size for display purposes.
-      return (
-        <div
-          style={{
-            maxHeight: "40px", // Adjust height to your preference
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            lineHeight: "1.4",
-            padding: "5px",
-            border: "1px solid #ddd",
-            borderRadius: "5px",
-            backgroundColor: "#f9f9f9",
-          }}
-          dangerouslySetInnerHTML={{ __html: value }}
-        />
-      );
+      return <RichEditorCell value={value} />;
+
+    case "email-list":
+      return <EmailListCell value={value} />;
 
     case "custom":
-      if (typeof value === "function") return value();
-      if (typeof value === "object" && value !== null)
-        return JSON.stringify(value);
-      return value;
+      return <CustomCell value={value} />;
 
     default:
-      if (typeof value === "object" && value !== null)
-        return JSON.stringify(value);
-      return <Text>{String(value)}</Text>;
+      return <CustomCell value={value} />;
   }
 }
+
+const FastroSuperCell = React.memo(FastroSuperCellComponent);
 
 export default FastroSuperCell;

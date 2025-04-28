@@ -14,13 +14,23 @@ import {
 export const useSupabaseQuery = <T>(
   table: string,
   options?: QueryOptions,
-  queryOptions?: Omit<UseQueryOptions<T>, "queryKey" | "queryFn">
+  queryOptions?: Omit<
+    UseQueryOptions<{ data: T; count: number | null }>,
+    "queryKey" | "queryFn"
+  >
 ) => {
-  return useQuery({
+  const query = useQuery({
     queryKey: [table, options],
     queryFn: () => supabaseApi.fetchTable<T>({ table, options }),
     ...queryOptions,
+    enabled: options?.enabled,
   });
+
+  return {
+    ...query,
+    data: query.data?.data ?? [],
+    count: query.data?.count ?? null,
+  };
 };
 
 export const useSupabaseQueryById = <T>(
@@ -246,17 +256,20 @@ export const useSupabaseRpc = <
   T,
   P extends Record<string, any> | undefined = Record<string, any>
 >(
-  fn: string,
-  options?: {
-    onSuccess?: (data: T) => void;
-    onError?: (error: Error) => void;
-  }
-): UseMutationResult<T, Error, P> => {
-  return useMutation({
-    mutationFn: (params: P) => supabaseApi.rpc<T>({ fn, params }),
-    onSuccess: options?.onSuccess,
-    onError: options?.onError,
+  fn: string, // The name of the RPC function
+  params?: P, // The parameters for the function
+  queryOptions?: Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">
+) => {
+  const query = useQuery<T, Error>({
+    queryKey: [fn, params],
+    queryFn: () => supabaseApi.rpc<T>({ fn, params }),
+    ...queryOptions,
+    enabled: queryOptions?.enabled,
   });
+  return {
+    ...query,
+    data: query.data ?? null,
+  };
 };
 
 // Data provider factory

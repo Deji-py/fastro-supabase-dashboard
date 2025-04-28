@@ -42,24 +42,8 @@ export function generateColumns<T extends object>(
         const rawValue = row.original[typedKey];
         const normalizer = variantShapes[variant];
         const value = normalizer ? normalizer(rawValue) : rawValue;
-
-        const options =
-          variant === "status"
-            ? {
-                statusMap: {
-                  complete: { icon: "✅", color: "green" },
-                  pending: { icon: "⏳", color: "orange" },
-                  failed: { icon: "❌", color: "red" },
-                },
-              }
-            : undefined;
-
         return (
-          <FastroSuperCell
-            value={value}
-            variant={variant as CellVariants}
-            options={options}
-          />
+          <FastroSuperCell value={value} variant={variant as CellVariants} />
         );
       },
     };

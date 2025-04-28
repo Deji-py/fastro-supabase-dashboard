@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   Modal,
   Button,
@@ -305,4 +305,4 @@ function CSVImportModal({
   );
 }
 
-export default CSVImportModal;
+export default React.memo(CSVImportModal);

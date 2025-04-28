@@ -1,5 +1,3 @@
-"use client";
-
 import {
   TextInput,
   Checkbox,
@@ -16,9 +14,14 @@ import {
   Group,
   Box,
   Text,
+  ColorInput,
+  Button,
+  // Add this import
 } from "@mantine/core";
 import type { UseFormReturnType } from "@mantine/form";
 import FastroRichEditor from "./FastroRichEditor";
+import { DateTimePicker } from "@mantine/dates";
+import EmailListSelect from "./input_components/EmailListInput";
 
 export type InputType =
   | "input"
@@ -40,7 +43,11 @@ export type InputType =
   | "undefined"
   | "object"
   | "function"
-  | "rich-editor";
+  | "rich-editor"
+  | "color"
+  | "date"
+  | "image"
+  | "email-list-input";
 
 type Option = { label: string; value: string };
 
@@ -90,10 +97,9 @@ function FastroInput({
       return (
         <TextInput
           key={inputKey}
-          style={{
-            textTransform: "capitalize",
-          }}
+          style={{ textTransform: "capitalize" }}
           {...commonProps}
+          value={commonProps.value ?? ""} // <-- ensure it's never null
           placeholder={placeholder || `Enter ${label.toLowerCase()}`}
         />
       );
@@ -215,6 +221,15 @@ function FastroInput({
             />
           ))}
         </RadioGroup>
+      );
+
+    case "color":
+      return (
+        <ColorInput
+          {...commonProps}
+          description="Select a Color"
+          placeholder="Pick a color"
+        />
       );
 
     case "avatar": {
@@ -339,8 +354,134 @@ function FastroInput({
           }}
           label={label}
           value=""
-          readOnly
-          placeholder="No value (undefined)"
+        />
+      );
+
+    case "date":
+      // Handle the value and ensure it's a valid Date object
+      const dateValue = commonProps.value ? new Date(commonProps.value) : null;
+
+      // Check if the value is a valid date
+      const isValidDate =
+        dateValue instanceof Date && !isNaN(dateValue.getTime());
+
+      return (
+        <DateTimePicker
+          {...commonProps}
+          placeholder={placeholder || `Select ${label.toLowerCase()}`}
+          value={isValidDate ? dateValue : null} // Ensure we pass a valid Date object or null
+          onChange={(date) => {
+            // Handle onChange if needed
+            form.setFieldValue(name, date);
+          }}
+        />
+      );
+    case "image":
+      // Get the image as a base64 string (or URL if needed)
+      const imageValue = form.values[name] as string;
+
+      return (
+        <Box key={inputKey}>
+          <Text size="sm" mb={5} style={{ textTransform: "capitalize" }}>
+            {label}
+          </Text>
+
+          {/* Image Box with aspect ratio */}
+          <Box
+            style={{
+              position: "relative",
+              width: "100%",
+              paddingTop: "56.25%", // 16:9 aspect ratio
+              backgroundColor: "#f0f0f0",
+              borderRadius: "8px",
+              overflow: "hidden",
+            }}
+          >
+            {imageValue ? (
+              <img
+                src={imageValue} // Using the base64 string or URL
+                alt="Uploaded"
+                style={{
+                  position: "absolute",
+                  top: "0",
+                  left: "0",
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover", // Ensures the image fits the aspect ratio
+                }}
+              />
+            ) : (
+              <Text
+                c="gray"
+                style={{
+                  textAlign: "center",
+                  position: "absolute",
+                  top: "10%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                No image uploaded
+              </Text>
+            )}
+
+            {/* Button Overlay for Uploading Image */}
+            <Button
+              variant="light"
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 10,
+              }}
+              onClick={() => document.getElementById(name)?.click()} // Trigger FileInput click
+            >
+              Upload Image
+            </Button>
+
+            <FileInput
+              id={name}
+              size="sm"
+              style={{ display: "none" }} // Hide the FileInput
+              onChange={(file) => {
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = () => {
+                  form.setFieldValue(name, reader.result as string); // Store the base64 string
+                };
+                reader.readAsDataURL(file); // Read the file as a base64 string
+              }}
+              disabled={disabled}
+            />
+          </Box>
+
+          {/* Image Name Input */}
+          <TextInput
+            mt={5}
+            size="sm"
+            placeholder="Image Name"
+            value={imageValue || ""}
+            onChange={(e) => form.setFieldValue(name, e.target.value)} // Update the base64 string
+            disabled={disabled}
+          />
+
+          {inputProps.error && (
+            <Text c="red" size="xs" mt={5}>
+              {inputProps.error}
+            </Text>
+          )}
+        </Box>
+      );
+
+    case "email-list-input":
+      return (
+        <EmailListSelect
+          label={label}
+          placeholder={placeholder || `Select ${label.toLowerCase()}`}
+          onChange={(value: string[]) => form.setFieldValue(name, value)} // Set selected email IDs to form
+          disabled={disabled}
         />
       );
 

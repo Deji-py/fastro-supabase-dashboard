@@ -4,7 +4,7 @@ import { CellVariants } from "@/utils/FastroSuperCell";
 export const variantShapes: Record<string, (value: any) => any> = {
   avatar: (value) => {
     if (typeof value === "string") {
-      return { src: value, name: "User" };
+      return { src: value, name: "User Avatar" };
     }
     return value;
   },
@@ -63,6 +63,7 @@ export const inputToCellVariantMap: Record<string, CellVariants> = {
   undefined: "custom",
   object: "custom",
   function: "custom",
+  icon: "icon",
 };
 
 // Map cell variants to input types
@@ -71,8 +72,8 @@ export const cellVariantToInputMap: Record<CellVariants, string> = {
   badge: "select",
   progress: "number",
   status: "select",
-  icon: "select",
-  date: "input",
+  icon: "input",
+  date: "date",
   rating: "number",
   flag: "input",
   verified: "checkbox",
@@ -81,13 +82,16 @@ export const cellVariantToInputMap: Record<CellVariants, string> = {
   email: "input",
   phone: "input",
   username: "input",
-  image: "avatar",
+  image: "image",
   tag: "input",
   boolean: "checkbox",
   role: "select",
   location: "input",
   custom: "input",
   "rich-editor": "rich-editor",
+  color: "color",
+  sentiment: "number",
+  "email-list": "email-list-input",
 };
 
 // Get appropriate input type based on cell variant and value

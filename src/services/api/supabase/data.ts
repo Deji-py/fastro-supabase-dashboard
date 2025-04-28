@@ -146,9 +146,17 @@ const applyFilters = (
 // Base API functions
 export const supabaseApi = {
   // Fetch all records from a table
-  fetchTable: async <T>({ table, options }: FetchTableParams): Promise<T> => {
+  fetchTable: async <T>({
+    table,
+    options,
+  }: FetchTableParams): Promise<{ data: T; count: number | null }> => {
     try {
-      let query = supabaseClient.from(table).select(options?.select || "*");
+      let query = supabaseClient
+        .from(table)
+        .select(
+          options?.select || "*",
+          options?.count ? { count: options.count } : undefined
+        );
 
       // Apply filters
       if (options?.filters) {
@@ -182,10 +190,7 @@ export const supabaseApi = {
       } else if (options?.maybeSingle) {
         result = await query.maybeSingle();
       } else if (options?.head) {
-        result = await query
-          .limit(0)
-          .select("*")
-          .limit(parseInt(options.count as string));
+        result = await query.limit(0).select("*");
       } else {
         result = await query;
       }
@@ -194,7 +199,10 @@ export const supabaseApi = {
         throw result.error;
       }
 
-      return result.data as T;
+      return {
+        data: result.data as T,
+        count: result.count ?? null,
+      };
     } catch (error) {
       console.log(`Error fetching from ${table}:`, error);
       throw error;

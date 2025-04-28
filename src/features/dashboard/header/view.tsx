@@ -1,17 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Flex, Group, Avatar, Skeleton, Text } from "@mantine/core";
-import {
-  IconBrandDiscord,
-  IconBrandGithub,
-  IconFileText,
-  IconHeart,
-  IconMoon,
-  IconSun,
-} from "@tabler/icons-react";
-
+import React, { useState } from "react";
+import { Flex, Group, Popover, Text } from "@mantine/core";
+import { IconMoon, IconSun } from "@tabler/icons-react";
 import { useMantineColorScheme } from "@mantine/core";
+
 import Fastro_RichSearch from "@/components/molecules/blocks/Fastro_RichSearch";
 import Fastro_HeaderActionIcons, {
   ActionIconItem,
@@ -19,43 +12,80 @@ import Fastro_HeaderActionIcons, {
 import FastroSearchItem from "@/utils/FastroSearchItem";
 import { User as FastroUser } from "@/types";
 import Fastro_UserGreeting from "@/components/molecules/blocks/Fastro_UserGreeting";
+import { Bell, DollarSign, Mail, PenBox } from "lucide-react";
+import NotificationList from "@/features/notifications/NotificationDropdown";
+import { Activity, useNotifications } from "@/providers/notification-provider";
 
 function HeaderView() {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const isDark = colorScheme === "dark";
 
+  const [activitiesOpened, setActivitiesOpened] = useState(false);
+  const { notifications } = useNotifications();
+
+  const allActivities = notifications.groups.flatMap(
+    (group) => group.activities
+  );
+
   const actionIcons: ActionIconItem[] = [
     {
-      icon: <IconBrandDiscord size={20} />,
-      label: "Discord",
-      color: "indigo",
-      onClick: () => window.open("https://discord.com", "_blank"),
-      variant: "default",
+      icon: (
+        <Popover
+          width={500}
+          position="bottom-end"
+          withArrow
+          shadow="md"
+          opened={activitiesOpened}
+          onChange={setActivitiesOpened}
+          trapFocus={false}
+          withinPortal
+          withOverlay
+        >
+          <Popover.Target>
+            <Bell
+              size={20}
+              style={{ cursor: "pointer" }}
+              onClick={() => setActivitiesOpened((o) => !o)}
+            />
+          </Popover.Target>
+          <Popover.Dropdown>
+            <NotificationList activities={allActivities} />
+          </Popover.Dropdown>
+        </Popover>
+      ),
+      label: "activities",
+      color: "violet",
+      onClick: () => {}, // no external click now
+      variant: "light",
+      notification:
+        notifications.totalUnseen > 0
+          ? { count: notifications.totalUnseen }
+          : undefined,
     },
     {
-      icon: <IconHeart size={20} />,
-      label: "Like",
-      color: "red",
+      icon: <Mail size={20} />,
+      label: "Send Mail",
+      color: "violet",
       onClick: () => console.log("Liked!"),
-      variant: "default",
+      variant: "light",
     },
     {
-      icon: <IconBrandGithub size={20} />,
-      label: "GitHub",
+      icon: <PenBox size={20} />,
+      label: "Blogs",
       onClick: () => window.open("https://github.com", "_blank"),
-      variant: "default",
+      variant: "light",
     },
     {
-      icon: <IconFileText size={20} />,
-      label: "Documentation",
+      icon: <DollarSign size={20} />,
+      label: "Earnings",
       onClick: () => console.log("Open docs"),
-      variant: "default",
+      variant: "light",
     },
     {
       icon: isDark ? <IconSun size={20} /> : <IconMoon size={20} />,
       label: isDark ? "Light mode" : "Dark mode",
       onClick: () => toggleColorScheme(),
-      variant: "default",
+      variant: "light",
     },
   ];
 

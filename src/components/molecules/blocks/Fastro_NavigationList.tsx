@@ -1,5 +1,6 @@
 import React from "react";
-import { Box, NavLink, Text } from "@mantine/core";
+import { Badge, Box, NavLink, Text } from "@mantine/core";
+import Link from "next/link";
 
 export type NavItem = {
   label: string;
@@ -7,6 +8,7 @@ export type NavItem = {
   onClick?: () => void;
   href?: string;
   active?: boolean;
+  notification?: { count: number };
 };
 
 type Fastro_NavigationListProps = {
@@ -40,8 +42,15 @@ function Fastro_NavigationList({
               ? item.icon(!!item.active)
               : item.icon
           }
-          component={item.href ? "a" : "button"}
-          href={item.href}
+          rightSection={
+            item.notification ? (
+              <Badge size="xs" color="red.7">
+                {item.notification.count}
+              </Badge>
+            ) : null
+          }
+          component={Link}
+          href={item.href as string}
           onClick={item.onClick}
           active={item.active}
           variant="light"

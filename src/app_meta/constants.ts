@@ -1,4 +1,4 @@
-const APP_NAME = "Fastro Dasboard";
+const APP_NAME = "Cold Outreach";
 const APP_NAME_SHORT = "CO";
 const BATCH_PROCESSOR_URL = "http://localhost:5000/admin/queues";
 
